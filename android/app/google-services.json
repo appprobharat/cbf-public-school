@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "704561746447",
+    "project_id": "cbf-publicschool",
+    "storage_bucket": "cbf-publicschool.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:704561746447:android:59948693c4292ac6ee097a",
+        "android_client_info": {
+          "package_name": "com.cbfpublicschool.apppro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALy60vGP38z35aLNzQibaYo3RVfdXdbPI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
