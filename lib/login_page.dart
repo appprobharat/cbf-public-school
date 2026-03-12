@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cbf/admin/admin_dashboard.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:cbf/api_service.dart';
@@ -18,7 +19,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscureText = true;
   bool _isLoading = false;
   String _errorMessage = '';
-  String selectedRole = 'Student';
 
   @override
   void dispose() {
@@ -28,6 +28,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
+    // 1️⃣ Validation
     if (idController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
       setState(() {
@@ -43,15 +44,16 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      // 2️⃣ API Call (NO type sent)
       final response = await ApiService.postPublic(
         "/login",
         body: {
           'username': idController.text.trim(),
           'password': passwordController.text,
-          'type': selectedRole,
         },
       ).timeout(const Duration(seconds: 15));
 
+      // 3️⃣ Null response check
       if (response == null) {
         setState(() {
           _errorMessage = "Server not responding";
@@ -63,22 +65,26 @@ class _LoginPageState extends State<LoginPage> {
       final data = jsonDecode(response.body);
       debugPrint("🟢 LOGIN RESPONSE: $data");
 
+      // 4️⃣ Success
       if (data['status'] == true) {
         await ApiService.saveSession(data);
 
-        // 🔴 STOP LOADER BEFORE ANY NAVIGATION
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-
-        // send token AFTER stopping loader (safe)
-        sendFcmTokenToLaravel();
+        await sendFcmTokenToLaravel();
 
         if (!mounted) return;
 
-        if (selectedRole == 'Teacher') {
+        final String userType = data['user_type'];
+
+        if (userType == 'Teacher') {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
+            (_) => false,
+          );
+        } else if (userType == 'Admin') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => AdminDashboardPage()),
             (_) => false,
           );
         } else {
@@ -89,24 +95,25 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } else {
+        // 5️⃣ Invalid credentials
         setState(() {
           _errorMessage = data['message'] ?? "Invalid credentials";
-          _isLoading = false;
         });
       }
     } on TimeoutException {
-      // 🔴 INTERNET SLOW / SERVER STUCK
       setState(() {
-        _errorMessage = "Connection timeout. Please try again.";
-        _isLoading = false;
+        _errorMessage = "Request timeout. Please try again.";
       });
     } catch (e) {
       debugPrint("❌ LOGIN ERROR: $e");
-
       setState(() {
-        _errorMessage = "Something went wrong. Try again.";
-        _isLoading = false;
+        _errorMessage = "Something went wrong";
       });
+    } finally {
+      // 6️⃣ Loader stop (always)
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -142,87 +149,8 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Widget roleToggleSwitch() {
-    return Container(
-      width: 250,
-      height: 50,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        color: Colors.grey[200],
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300,
-            blurRadius: 4,
-            offset: Offset(2, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Student tab
-          Expanded(
-            child: InkWell(
-              onTap: () => setState(() => selectedRole = 'Student'),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  gradient: selectedRole == 'Student'
-                      ? LinearGradient(
-                          colors: [Colors.purple, AppColors.primary],
-                        )
-                      : null,
-                ),
-                child: Text(
-                  "Student",
-                  style: TextStyle(
-                    color: selectedRole == 'Student'
-                        ? Colors.white
-                        : AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Teacher tab
-          Expanded(
-            child: InkWell(
-              onTap: () => setState(() => selectedRole = 'Teacher'),
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  gradient: selectedRole == 'Teacher'
-                      ? LinearGradient(
-                          colors: [Colors.purple, AppColors.primary],
-                        )
-                      : null,
-                ),
-                child: Text(
-                  "Teacher",
-                  style: TextStyle(
-                    color: selectedRole == 'Teacher'
-                        ? Colors.white
-                        : AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isStudent = selectedRole == 'Student';
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -251,23 +179,21 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(fontSize: 14),
                   ),
                   SizedBox(height: 20),
-                  roleToggleSwitch(),
-                  SizedBox(height: 30),
-
                   Text(
-                    "$selectedRole Login",
+                    "Login Here",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
                     ),
                   ),
+
                   SizedBox(height: 20),
 
                   TextField(
                     controller: idController,
                     decoration: InputDecoration(
-                      labelText: isStudent ? "Student ID" : "Teacher ID",
+                      labelText: 'Username',
                       prefixIcon: Icon(Icons.person),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),

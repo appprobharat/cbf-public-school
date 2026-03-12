@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:cbf/dashboard/dashboard_screen.dart';
+import 'package:cbf/profile_page.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
@@ -17,6 +18,7 @@ import 'package:cbf/payment/payment_page.dart';
 import 'package:cbf/school_info_page.dart';
 import 'package:cbf/subjects_page.dart';
 import 'package:cbf/syllabus/syllabus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -26,12 +28,20 @@ class StudentDashboard extends StatefulWidget {
 }
 
 class _StudentDashboardState extends State<StudentDashboard> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   int fine = 0;
   int dues = 0;
   int payments = 0;
   String lastPaymentDate = '';
   String status = '';
   int subjects = 0;
+  String studentName = '';
+  String studentPhoto = '';
+  String studentClass = '';
+  String studentSection = '';
+  String schoolName = '';
+  int _currentIndex = 0;
 
   Map<String, dynamic> attendance = {};
   List<Map<String, dynamic>> homeworks = [];
@@ -43,10 +53,22 @@ class _StudentDashboardState extends State<StudentDashboard> {
   @override
   void initState() {
     super.initState();
+
+    loadProfileData();
     fetchDashboardData(context).then((_) {
-      setState(() {
-        loading = false;
-      });
+      setState(() => loading = false);
+    });
+  }
+
+  Future<void> loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      studentName = prefs.getString('student_name') ?? '';
+      studentPhoto = prefs.getString('student_photo') ?? '';
+      schoolName = prefs.getString('school_name') ?? '';
+      studentClass = prefs.getString('class_name') ?? '';
+      studentSection = prefs.getString('section') ?? '';
     });
   }
 
@@ -96,231 +118,112 @@ class _StudentDashboardState extends State<StudentDashboard> {
     }
   }
 
+  // String _formatSchoolName(String name) {
+  //   final parts = name.split(' ');
+
+  //   if (parts.length <= 2) {
+  //     return name;
+  //   }
+  //   final mid = (parts.length / 2).ceil();
+  //   final firstLine = parts.sublist(0, mid).join(' ');
+  //   final secondLine = parts.sublist(mid).join(' ');
+
+  //   return '$firstLine\n$secondLine';
+  // }
+
+  // String _attendanceText() {
+  //   final present = attendance['present'] ?? 0;
+  //   final total = attendance['working_days'] ?? 0;
+
+  //   if (total == 0) return "N/A";
+  //   return "$present/$total";
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xffF5F7FB),
+      drawer: LeftSidebarMenu(
+        studentName: studentName,
+        studentPhoto: studentPhoto,
+        studentClass: studentClass,
+        studentsection: studentSection,
+      ),
 
       // 🔹 TOP PROFILE BAR
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // ================= HEADER =================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primary],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(22),
-                    bottomRight: Radius.circular(22),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 28,
-                      backgroundImage: AssetImage("assets/images/logo.png"),
-                    ),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "Vishal Raj",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          "Class 1 - Section A",
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Column(
-                      children: const [
-                        Icon(Icons.menu_book, color: Colors.white, size: 30),
-                        SizedBox(height: 4),
-                        Text(
-                          "Shiwalik\nPublic School",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+        child: Stack(
+          children: [
+            _HomeBody(
+              loading: loading,
+              studentName: studentName,
+              studentPhoto: studentPhoto,
+              studentClass: studentClass,
+              studentSection: studentSection,
+              schoolName: schoolName,
+              dues: dues,
+              fine: fine,
+              status: status,
+              attendance: attendance,
+              homeworks: homeworks,
+            ),
+
+            if (loading)
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
               ),
-
-              const SizedBox(height: 05),
-
-              // ================= TOP STATUS CARDS =================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: const [
-                    Expanded(
-                      child: _TopCard(
-                        title: "Due Fee",
-                        subtitle: "Pending: ",
-                        value: "₹5,000",
-                        color: Color(0xFFEF4444),
-                        icon: Icons.currency_rupee,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: _TopCard(
-                        title: "Late Pay",
-                        subtitle: "",
-                        value: "Pay Overdue",
-                        color: Color(0xFFF97316),
-                        icon: Icons.access_time,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: _TopCard(
-                        title: "Today Attendance",
-                        subtitle: "Present: ",
-                        value: "5/6",
-                        color: Color(0xFF22C55E),
-                        icon: Icons.check_circle,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Text(
-                      "Quick Links",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ================= QUICK LINKS GRID =================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GridView.count(
-                  crossAxisCount: 4,
-                  childAspectRatio: 0.95,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  children: const [
-                    _QuickItem("Subjects", Icons.menu_book, Color(0xff42A5F5)),
-                    _QuickItem(
-                      "Time Table",
-                      Icons.access_time,
-                      Color(0xff7E57C2),
-                    ),
-                    _QuickItem(
-                      "Calendar",
-                      Icons.calendar_month,
-                      Color(0xff66BB6A),
-                    ),
-                    _QuickItem("Syllabus", Icons.edit, Color(0xff26A69A)),
-
-                    _QuickItem("Exam", Icons.assignment, Color(0xffFFA726)),
-                    _QuickItem(
-                      "Payment",
-                      Icons.currency_rupee,
-                      Color(0xffEF5350),
-                    ),
-                    _QuickItem("School Info", Icons.home, Color(0xff5C6BC0)),
-                    _QuickItem("Notice", Icons.campaign, Color(0xffEC407A)),
-
-                    _QuickItem(
-                      "Attendance",
-                      Icons.celebration,
-                      Color(0xffFFB300),
-                    ),
-                    _QuickItem("Result", Icons.star, Color(0xffAB47BC)),
-                    _QuickItem(
-                      "Complaint",
-                      Icons.report_problem,
-                      Color(0xffFB8C00),
-                    ),
-                    _QuickItem("Chat", Icons.chat, Color(0xff43A047)),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              // ================= HOMEWORK SECTION =================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Homework",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    if (homeworks.isEmpty) const Text("No homework assigned"),
-
-                    ...List.generate(homeworks.length, (i) {
-                      final hw = homeworks[i];
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _HomeworkCard(
-                          work: hw['HomeworkTitle'] ?? '',
-                          date: hw['WorkDate'] ?? '',
-                          attachment: hw['Attachment'],
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 80),
-            ],
-          ),
+          ],
         ),
       ),
 
       // ================= BOTTOM NAV =================
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xff3F51B5),
+        currentIndex: _currentIndex,
+        selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+
+          switch (index) {
+            case 0:
+              break;
+
+            case 1:
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ConnectWithUsPage(
+                    teacherId: 0,
+                    teacherName: '',
+                    teacherPhoto: '',
+                  ),
+                ),
+              );
+              break;
+
+            case 2:
+              // Profile
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProfilePage()),
+              );
+
+              break;
+
+            case 3:
+              _scaffoldKey.currentState?.openDrawer();
+              break;
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.campaign), label: "Notice"),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: "Chat"),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: "chat"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Menu"),
         ],
       ),
     );
@@ -568,6 +471,294 @@ class _QuickItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HomeBody extends StatelessWidget {
+  final bool loading;
+  final String studentName;
+  final String studentPhoto;
+  final String studentClass;
+  final String studentSection;
+  final String schoolName;
+  final int dues;
+  final int fine;
+  final String status;
+  final Map<String, dynamic> attendance;
+  final List<Map<String, dynamic>> homeworks;
+
+  const _HomeBody({
+    required this.loading,
+    required this.studentName,
+    required this.studentPhoto,
+    required this.studentClass,
+    required this.studentSection,
+    required this.schoolName,
+    required this.dues,
+    required this.fine,
+    required this.status,
+    required this.attendance,
+    required this.homeworks,
+  });
+
+  String _attendanceText() {
+    final present = attendance['present'] ?? 0;
+    final total = attendance['working_days'] ?? 0;
+    if (total == 0) return "N/A";
+    return "$present/$total";
+  }
+
+  String _formatSchoolName(String name) {
+    final parts = name.split(' ');
+    if (parts.length <= 2) return name;
+
+    final mid = (parts.length / 2).ceil();
+    return '${parts.sublist(0, mid).join(' ')}\n'
+        '${parts.sublist(mid).join(' ')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // ================= HEADER =================
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.primary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(22),
+                bottomRight: Radius.circular(22),
+              ),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundImage: studentPhoto.isNotEmpty
+                      ? NetworkImage(studentPhoto)
+                      : const AssetImage("assets/images/logo.png")
+                            as ImageProvider,
+                ),
+
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      studentName.isNotEmpty ? studentName : "Student",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    Text(
+                      "$studentClass - Section $studentSection",
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Column(
+                  children: [
+                    Icon(Icons.menu_book, color: Colors.white, size: 30),
+                    SizedBox(height: 4),
+                    Text(
+                      schoolName.isNotEmpty
+                          ? _formatSchoolName(schoolName)
+                          : "School",
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 05),
+
+          // ================= TOP STATUS CARDS =================
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _TopCard(
+                    title: "Due Fee",
+                    subtitle: "Pending: ",
+                    value: "₹$dues",
+                    color: dues > 0
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF22C55E),
+                    icon: Icons.currency_rupee,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _TopCard(
+                    title: "Late Pay",
+                    subtitle: "",
+                    value: fine > 0 ? "₹$fine Fine" : "No Fine",
+                    color: fine > 0
+                        ? const Color(0xFFF97316)
+                        : const Color(0xFF22C55E),
+                    icon: Icons.access_time,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _TopCard(
+                    title: "Today Attendance",
+                    subtitle: "",
+                    value: _attendanceText(),
+                    color: status == "Present"
+                        ? const Color(0xFF22C55E)
+                        : const Color(0xFFEF4444),
+                    icon: Icons.check_circle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Text(
+                  "Quick Links",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ],
+            ),
+          ),
+
+          // ================= QUICK LINKS GRID =================
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: GridView.count(
+              crossAxisCount: 4,
+              childAspectRatio: 0.95,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              children: const [
+                _QuickItem("Subjects", Icons.menu_book, Color(0xff42A5F5)),
+                _QuickItem("Time Table", Icons.access_time, Color(0xff7E57C2)),
+                _QuickItem("Calendar", Icons.calendar_month, Color(0xff66BB6A)),
+                _QuickItem("Syllabus", Icons.edit, Color(0xff26A69A)),
+
+                _QuickItem("Exam", Icons.assignment, Color(0xffFFA726)),
+                _QuickItem("Payment", Icons.currency_rupee, Color(0xffEF5350)),
+                _QuickItem("School Info", Icons.home, Color(0xff5C6BC0)),
+                _QuickItem("Notice", Icons.campaign, Color(0xffEC407A)),
+
+                _QuickItem("Attendance", Icons.celebration, Color(0xffFFB300)),
+                _QuickItem("Result", Icons.star, Color(0xffAB47BC)),
+                _QuickItem(
+                  "Complaint",
+                  Icons.report_problem,
+                  Color(0xffFB8C00),
+                ),
+                _QuickItem("Chat", Icons.chat, Color(0xff43A047)),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // ================= HOMEWORK SECTION =================
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 🔹 HEADER ROW
+                  Row(
+                    children: const [
+                      Icon(Icons.assignment, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Text(
+                        "Homework",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                  Divider(color: Colors.grey.shade300),
+                  const SizedBox(height: 8),
+
+                  // 🔹 CONTENT
+                  if (homeworks.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Center(
+                        child: Text(
+                          "No homework assigned",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    )
+                  else
+                    Column(
+                      children: List.generate(homeworks.length, (i) {
+                        final hw = homeworks[i];
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _HomeworkCard(
+                            work: hw['HomeworkTitle'] ?? '',
+                            date: hw['WorkDate'] ?? '',
+                            attachment: hw['Attachment'],
+                          ),
+                        );
+                      }),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 80),
+        ],
       ),
     );
   }

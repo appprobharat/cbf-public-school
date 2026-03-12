@@ -13,15 +13,12 @@ class AssignMarksPage extends StatefulWidget {
 class _AssignMarksPageState extends State<AssignMarksPage> {
   String? selectedExamId;
   String? selectedSubjectId;
-
   List exams = [];
   List subjects = [];
   List students = [];
   List filteredStudents = [];
-
   bool isLoading = false;
   bool isSubmitting = false;
-
   String searchQuery = '';
 
   final TextEditingController totalMarkController = TextEditingController();
@@ -170,8 +167,6 @@ class _AssignMarksPageState extends State<AssignMarksPage> {
 
   // ---------------- SUBMIT ----------------
   Future<void> updateMarks() async {
-    // validation unchanged
-
     setState(() => isSubmitting = true);
 
     final payload = {
@@ -224,11 +219,10 @@ class _AssignMarksPageState extends State<AssignMarksPage> {
       ),
     );
   }
-
+  
   // ---------------- UI (UNCHANGED) ----------------
   @override
   Widget build(BuildContext context) {
-    // ⛔ UI untouched as requested
     return Scaffold(
       appBar: AppBar(
         title: const Text("Assign Marks"),
@@ -533,7 +527,7 @@ class _AssignMarksPageState extends State<AssignMarksPage> {
                       ],
                     ),
                   ),
-                );
+                ); 
               }).toList(),
               if (students.isNotEmpty)
                 ElevatedButton(

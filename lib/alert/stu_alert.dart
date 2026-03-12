@@ -18,7 +18,7 @@ class _StudentAlertPageState extends State<StudentAlertPage> {
   Set<String> selectedStudentIds = {};
 
   bool isLoading = false;
-  bool isSending = false; // 🔥 NEW → Loader for Send Button
+  bool isSending = false;
   bool selectAll = false;
 
   @override
@@ -40,13 +40,9 @@ class _StudentAlertPageState extends State<StudentAlertPage> {
     setState(() => isLoading = true);
 
     try {
-   final res = await ApiService.post(
-  context,
-  "/teacher/student/list",
-);
+      final res = await ApiService.post(context, "/teacher/student/list");
 
-
-      // 🔐 AuthHelper handles 401 + logout
+     
       if (res == null) return;
 
       debugPrint("📥 STUDENT LIST STATUS: ${res.statusCode}");
@@ -93,13 +89,9 @@ class _StudentAlertPageState extends State<StudentAlertPage> {
     });
   }
 
-  // ====================================================
-  // 🔴 SEND ALERT (Loader Added)
-  // ====================================================
   Future<void> sendAlert() async {
     final message = descriptionController.text.trim();
 
-    // 🔒 Validation
     if (message.isEmpty || selectedStudentIds.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,12 +102,12 @@ class _StudentAlertPageState extends State<StudentAlertPage> {
       return;
     }
 
-    // 🔄 Start loader
+    // Start loader
     if (!mounted) return;
     setState(() => isSending = true);
 
     try {
-      // 🔹 Collect FCM tokens safely
+      //  Collect FCM tokens safely
       final List<String> tokens = [];
 
       for (final student in students) {
@@ -143,13 +135,12 @@ class _StudentAlertPageState extends State<StudentAlertPage> {
       debugPrint("📤 ALERT BODY: $body");
 
       // 🔐 SAFE API CALL (same pattern as dashboard)
-    final res = await ApiService.post(
-  context,
-  "/teacher/student/alert",
-  body: body,
-);
+      final res = await ApiService.post(
+        context,
+        "/teacher/student/alert",
+        body: body,
+      );
 
-      // ⚠️ AuthHelper already handles 401 + logout
       if (res == null) return;
 
       debugPrint("📥 ALERT STATUS: ${res.statusCode}");
@@ -181,7 +172,6 @@ class _StudentAlertPageState extends State<StudentAlertPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
     } finally {
-      // 🔄 Stop loader safely
       if (!mounted) return;
       setState(() => isSending = false);
     }
@@ -197,7 +187,9 @@ class _StudentAlertPageState extends State<StudentAlertPage> {
       ),
 
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary),)
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : Column(
               children: [
                 // MESSAGE BOX

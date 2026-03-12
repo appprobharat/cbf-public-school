@@ -115,7 +115,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return NetworkImage(
       studentPhoto.startsWith('http')
           ? studentPhoto
-          : 'https://school.edusathi.in/$studentPhoto',
+          : '${ApiService.Url}/$studentPhoto',
     );
   }
 

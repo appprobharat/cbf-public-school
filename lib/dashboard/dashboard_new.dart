@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:cbf/Attendance_UI/stu_attendance_page.dart';
 import 'package:cbf/Exam/exam_schedule.dart';
@@ -10,7 +9,6 @@ import 'package:cbf/complaint/view_complaints_page.dart';
 import 'package:cbf/connect_teacher/connect_with_us.dart';
 import 'package:cbf/dashboard/calendar.dart';
 import 'package:cbf/dashboard/dashboard_screen.dart';
-// import 'package:cbf/dashboard/dashboard_screen.dart';
 import 'package:cbf/dashboard/payment_screen.dart';
 import 'package:cbf/dashboard/timetable_page.dart';
 import 'package:cbf/homework/homework_page.dart';
@@ -41,7 +39,6 @@ class _DashboardNewState extends State<DashboardNew> {
   List<dynamic> siblings = [];
   String studentPhoto = '';
   String studentName = '';
-
   String schoolName = '';
   String studentClass = '';
   String studentsection = '';
