@@ -22,7 +22,7 @@ dependencies:
   in_app_update: ^4.2.5
   geolocator: ^14.0.2
   month_year_picker: ^0.5.0+1
-  google_maps_flutter: ^2.14.2
+
   
 
 
