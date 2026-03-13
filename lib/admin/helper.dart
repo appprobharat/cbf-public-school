@@ -127,11 +127,13 @@ class _ReusableOverlayDropdownState extends State<ReusableOverlayDropdown> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 4),
+          if (widget.label.isNotEmpty) ...[
+            Text(
+              widget.label,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 2), 
+          ],
           Container(
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 10),

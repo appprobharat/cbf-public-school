@@ -214,19 +214,19 @@ class _IncomeExpenseListState extends State<IncomeExpenseList> {
     );
 
     if (picked != null) {
-    if (isFrom && picked.isAfter(DateTime.parse(toDate))) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("From date cannot be after To date")),
-      );
-      return;
-    }
+      if (isFrom && picked.isAfter(DateTime.parse(toDate))) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("From date cannot be after To date")),
+        );
+        return;
+      }
 
-    if (!isFrom && picked.isBefore(DateTime.parse(fromDate))) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("To date cannot be before From date")),
-      );
-      return;
-    }
+      if (!isFrom && picked.isBefore(DateTime.parse(fromDate))) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("To date cannot be before From date")),
+        );
+        return;
+      }
       String formatted = _formatDate(picked);
 
       setState(() {
@@ -326,11 +326,22 @@ class _IncomeExpenseListState extends State<IncomeExpenseList> {
                 _searchBar(context),
 
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(10),
-                    itemCount: filteredList.length,
-                    itemBuilder: (_, i) => _entryCard(filteredList[i]),
-                  ),
+                  child: filteredList.isEmpty
+                      ? const Center(
+                          child: Text(
+                            "No Data Found",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(10),
+                          itemCount: filteredList.length,
+                          itemBuilder: (_, i) => _entryCard(filteredList[i]),
+                        ),
                 ),
               ],
             ),

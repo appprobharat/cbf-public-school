@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:cbf/api_service.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -326,7 +327,7 @@ class _AddIncomeExpPageState extends State<AddIncomeExpPage> {
                       onTap: () async {
                         DateTime? d = await showDatePicker(
                           context: context,
-                          initialDate: DateTime.now(),
+                          initialDate: selectedDate ?? DateTime.now(),
                           firstDate: DateTime(2020),
                           lastDate: DateTime(2035),
                         );
@@ -335,10 +336,17 @@ class _AddIncomeExpPageState extends State<AddIncomeExpPage> {
                           setState(() => selectedDate = d);
                         }
                       },
-                      child: _field(
-                        selectedDate == null
-                            ? "Select Date"
-                            : "${selectedDate!.day}-${selectedDate!.month}-${selectedDate!.year}",
+                      child: Container(
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: _innerBox(),
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          selectedDate == null
+                              ? "Select Date"
+                              : "${selectedDate!.day}-${selectedDate!.month}-${selectedDate!.year}",
+                          style: const TextStyle(fontSize: 12),
+                        ),
                       ),
                     ),
                   ],
@@ -389,6 +397,7 @@ class _AddIncomeExpPageState extends State<AddIncomeExpPage> {
                       'Enter Price',
                       controller: priceCtrl,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ],
                 ),
@@ -403,6 +412,7 @@ class _AddIncomeExpPageState extends State<AddIncomeExpPage> {
                       'Qty',
                       controller: qtyCtrl,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ],
                 ),
@@ -431,18 +441,21 @@ class _AddIncomeExpPageState extends State<AddIncomeExpPage> {
           Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 38,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: _innerBox(),
-                  child: Text(
-                    attachmentFile != null
-                        ? attachmentFile!.path.split('/').last
-                        : (existingAttachment != null
-                              ? existingAttachment!.split('/').last
-                              : "No file selected"),
-                    style: const TextStyle(fontSize: 12),
+                child: InkWell(
+                  onTap: pickImage,
+                  child: Container(
+                    height: 38,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: _innerBox(),
+                    child: Text(
+                      attachmentFile != null
+                          ? attachmentFile!.path.split('/').last
+                          : (existingAttachment != null
+                                ? existingAttachment!.split('/').last
+                                : "No file selected"),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
                 ),
               ),
@@ -481,6 +494,7 @@ class _AddIncomeExpPageState extends State<AddIncomeExpPage> {
     String hint, {
     TextEditingController? controller,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Container(
       height: 38,
@@ -489,6 +503,7 @@ class _AddIncomeExpPageState extends State<AddIncomeExpPage> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         style: const TextStyle(fontSize: 12),
         decoration: InputDecoration(
           border: InputBorder.none,

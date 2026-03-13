@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 // import 'package:cbf/bus_tracking/bus_tracking.dart';
 import 'package:cbf/dashboard/stu_dashboard.dart';
+import 'package:cbf/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -1440,9 +1441,17 @@ class LeftSidebarMenu extends StatelessWidget {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(context);
-                          ApiService.post(context, "/logout");
+
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.clear();
+                          if (!context.mounted) return;
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (_) => LoginPage()),
+                            (route) => false,
+                          );
                         },
                         child: const Text("Logout"),
                       ),

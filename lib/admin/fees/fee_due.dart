@@ -165,6 +165,17 @@ class _FeeDuePageState extends State<FeeDuePage> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
+                : studentList.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No Data Found",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     itemCount: studentList.length,

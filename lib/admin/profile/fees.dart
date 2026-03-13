@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:cbf/api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:month_year_picker/month_year_picker.dart';
 
 class ClassFeesModel {
   final String className;
@@ -288,23 +287,128 @@ final percentText = (percent * 100).toStringAsFixed(0);
       ),
     );
   }
-
-  Future<void> pickMonth() async {
-    final picked = await showMonthYearPicker(
-      context: context,
-      initialDate: selectedMonth,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-
-    if (picked != null) {
-      setState(() {
-        selectedMonth = picked;
-      });
-      fetchAllDue();
-    }
+ String _monthName(int month) {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return months[month - 1];
   }
+  Future<void> pickMonth() async {
+    int tempYear = selectedMonth.year;
+    int tempMonth = selectedMonth.month;
 
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              title: const Text(
+                "Select Month & Year",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 260,
+                child: Column(
+                  children: [
+                    /// YEAR DROPDOWN
+                    DropdownButton<int>(
+                      value: tempYear,
+                      isExpanded: true,
+                      items: List.generate(20, (index) {
+                        int year = DateTime.now().year - 10 + index;
+                        return DropdownMenuItem(
+                          value: year,
+                          child: Text(year.toString()),
+                        );
+                      }),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setStateDialog(() {
+                            tempYear = value;
+                          });
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    /// MONTH GRID
+                    Expanded(
+                      child: GridView.builder(
+                        itemCount: 12,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                              childAspectRatio: 2.4,
+                            ),
+                        itemBuilder: (context, index) {
+                          int month = index + 1;
+
+                          bool isSelected =
+                              month == tempMonth &&
+                              tempYear == selectedMonth.year;
+
+                          return InkWell(
+                            onTap: () {
+                              tempMonth = month;
+
+                              setState(() {
+                                selectedMonth = DateTime(tempYear, tempMonth);
+                              });
+
+                              Navigator.pop(context);
+                              fetchAllDue();
+                            },
+                            child: Container(
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _monthName(month),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

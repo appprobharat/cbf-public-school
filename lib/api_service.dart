@@ -10,6 +10,7 @@ class ApiService {
   /// 🔥 CHANGE ONLY HERE
   static const String baseUrl = "https://cbfpublicschool.apppro.in/api";
   static const String Url = "https://cbfpublicschool.apppro.in";
+
   /// ⏱ Timeout (iOS safe)
   static const Duration timeout = Duration(seconds: 20);
 
@@ -31,13 +32,12 @@ class ApiService {
 
     return prefs.getString('auth_token') ?? '';
   }
-static Future<Map<String, String>> multipartHeaders() async {
-  final token = await _getToken();
-  return {
-    'Authorization': 'Bearer $token',
-    'Accept': 'application/json',
-  };
-}
+
+  static Future<Map<String, String>> multipartHeaders() async {
+    final token = await _getToken();
+    return {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
+  }
+
 
   // ================= LOGOUT =================
 

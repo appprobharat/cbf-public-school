@@ -42,7 +42,8 @@ class EarningExpenseChart extends StatefulWidget {
 class _EarningExpenseChartState extends State<EarningExpenseChart> {
   List<double> income = List.filled(12, 0);
   List<double> expense = List.filled(12, 0);
-
+  double totalIncome = 0;
+  double totalExpense = 0;
   bool isLoading = true;
 
   @override
@@ -59,17 +60,20 @@ class _EarningExpenseChartState extends State<EarningExpenseChart> {
 
       List incomeApi = data["income"] ?? [];
       List expenseApi = data["expenses"] ?? [];
-
+      totalIncome = income.fold(0, (a, b) => a + b);
+      totalExpense = expense.fold(0, (a, b) => a + b);
       income = List.generate(
         12,
         (i) => (incomeApi.length > i ? incomeApi[i] : 0).toDouble(),
       );
 
-      // expense ko negative banana zaroori hai chart ke liye
       expense = List.generate(
         12,
-        (i) => -(expenseApi.length > i ? expenseApi[i] : 0).toDouble(),
+        (i) => (expenseApi.length > i ? expenseApi[i] : 0).toDouble(),
       );
+
+      totalIncome = income.fold(0, (a, b) => a + b);
+      totalExpense = expense.fold(0, (a, b) => a + b);
 
       setState(() {
         isLoading = false;
@@ -83,6 +87,14 @@ class _EarningExpenseChartState extends State<EarningExpenseChart> {
 
   @override
   Widget build(BuildContext context) {
+    double getMaxY() {
+      double maxIncome = income.reduce((a, b) => a > b ? a : b);
+      double maxExpense = expense.reduce((a, b) => a > b ? a : b);
+      double maxValue = maxIncome > maxExpense ? maxIncome : maxExpense;
+
+      return (maxValue * 1.4); 
+    }
+
     if (isLoading) {
       return const SizedBox(
         height: 260,
@@ -138,12 +150,13 @@ class _EarningExpenseChartState extends State<EarningExpenseChart> {
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceBetween,
-                maxY: 50000,
-                minY: -180000,
+                maxY: getMaxY(),
+                minY: 0,
+
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 50000,
+                  horizontalInterval: getMaxY() / 5,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: value == 0 ? Colors.black26 : Colors.grey.shade200,
@@ -209,6 +222,70 @@ class _EarningExpenseChartState extends State<EarningExpenseChart> {
                 barGroups: _barGroups(),
               ),
             ),
+          ),
+          const SizedBox(height: 18),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Total Income",
+                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "₹ ${totalIncome.toStringAsFixed(0)}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.teal.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Total Expenses",
+                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "₹ ${totalExpense.toStringAsFixed(0)}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -880,7 +880,7 @@ Widget _input(
         maxLines: maxLines,
         keyboardType: keyboardType,
         inputFormatters: isNumber
-            ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
+            ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))]
             : null,
         style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(

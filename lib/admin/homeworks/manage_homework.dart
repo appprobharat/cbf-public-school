@@ -122,7 +122,7 @@ class _AdminHomeworkState extends State<AdminHomework> {
       "/admin/homework/list",
       body: {"from": fromDate, "to": toDate},
     );
-
+    debugPrint("BODY: ${response?.body}");
     if (response != null && response.statusCode == 200) {
       homeworkList = jsonDecode(response.body);
     } else {
@@ -237,6 +237,7 @@ class _AdminHomeworkState extends State<AdminHomework> {
     final className = item['Class']?.toString() ?? "";
     final section = item['Section']?.toString() ?? "";
     final date = item['Date']?.toString() ?? "";
+    final Title = item['Title']?.toString() ?? "";
     final submission = item['Submission']?.toString() ?? "";
     final remark = item['Remark']?.toString() ?? "";
     final addedBy = item['AddedBy']?.toString() ?? "";
@@ -298,6 +299,22 @@ class _AdminHomeworkState extends State<AdminHomework> {
             ),
 
             const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.title, size: 14, color: AppColors.primary),
+                const SizedBox(width: 6),
+
+                Expanded(
+                  child: Text(
+                    Title.isEmpty ? "No Title available" : Title,
+
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
 
             /// ===== ROW 2 → REMARK + DOWNLOAD =====
             Row(

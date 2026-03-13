@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cbf/admin/helper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:cbf/api_service.dart';
@@ -48,6 +49,7 @@ class _AddEventPageState extends State<AddEventPage> {
   DateTime _validDate = DateTime.now();
   File? _pickedFile;
   String _fileName = "No File Chosen";
+  String? existingAttachment;
   final ImagePicker _picker = ImagePicker();
   @override
   void initState() {
@@ -135,7 +137,8 @@ class _AddEventPageState extends State<AddEventPage> {
         _validDate = DateTime.parse(data['ValidDate']);
 
         if (data['Attachment'] != null) {
-          _fileName = "Existing file";
+          existingAttachment = data['Attachment'];
+          _fileName = data['Attachment'].toString().split('/').last;
         }
       }
     } catch (e) {
@@ -284,26 +287,31 @@ class _AddEventPageState extends State<AddEventPage> {
   }
 
   Widget _dropdown() {
-    return SizedBox(
-      height: 38,
-      child: DropdownButtonFormField<String>(
-        value: selectedEmployeeId,
-        hint: isEmployeeLoading
-            ? const Text("Loading...", style: TextStyle(fontSize: 12))
-            : const Text("--Select Employee--", style: TextStyle(fontSize: 12)),
-        items: employeeList.map((e) {
-          return DropdownMenuItem(
-            value: e.id,
-            child: Text(
-              "${e.name} (${e.designation}) / ${e.phone}",
-              style: const TextStyle(fontSize: 12),
-              overflow: TextOverflow.ellipsis,
-            ),
-          );
-        }).toList(),
-        onChanged: (v) => setState(() => selectedEmployeeId = v),
-        decoration: _dec(''),
+    return ReusableOverlayDropdown(
+      label: "",
+      hint: isEmployeeLoading ? "Loading..." : "--Select Employee--",
+      controller: TextEditingController(
+        text: employeeList
+            .firstWhere(
+              (e) => e.id == selectedEmployeeId,
+              orElse: () =>
+                  EmployeeModel(id: "", name: "", designation: "", phone: ""),
+            )
+            .name,
       ),
+      list: employeeList.map((e) {
+        return {
+          "label": "${e.name} (${e.designation}) / ${e.phone}",
+          "value": e.id,
+        };
+      }).toList(),
+      labelKey: "label",
+      valueKey: "value",
+      onSelected: (value, label) {
+        setState(() {
+          selectedEmployeeId = value;
+        });
+      },
     );
   }
 
@@ -339,33 +347,49 @@ class _AddEventPageState extends State<AddEventPage> {
   }
 
   Widget _filePicker() {
-    return Container(
-      height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: _innerBox(),
-      child: Row(
-        children: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey.shade300,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    return InkWell(
+      onTap: pickImage,
+      child: Container(
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: _innerBox(),
+        child: Row(
+          children: [
+            const Icon(Icons.attach_file, size: 18),
+
+            const SizedBox(width: 8),
+
+            Expanded(
+              child: Text(
+                _fileName,
+                style: const TextStyle(fontSize: 11),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            onPressed: pickImage,
-            child: const Text(
-              'Choose Image',
-              style: TextStyle(fontSize: 10, color: Colors.black),
+
+            /// RIGHT SIDE PREVIEW
+            Container(
+              height: 40,
+              width: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: Colors.grey.shade200,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: _pickedFile != null
+                    ? Image.file(_pickedFile!, fit: BoxFit.cover)
+                    : (existingAttachment != null &&
+                              existingAttachment!.isNotEmpty
+                          ? Image.network(
+                              existingAttachment!,
+                              fit: BoxFit.cover,
+                            )
+                          : const Icon(Icons.image, size: 18)),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _fileName,
-              style: const TextStyle(fontSize: 10),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -417,7 +441,7 @@ class _AddEventPageState extends State<AddEventPage> {
     hintText: hint,
     hintStyle: const TextStyle(fontSize: 11),
     filled: true,
-    fillColor: const Color(0xFFF4ECFA),
+    fillColor: Colors.white,
     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
     enabledBorder: OutlineInputBorder(
@@ -433,7 +457,7 @@ class _AddEventPageState extends State<AddEventPage> {
   );
 
   BoxDecoration _innerBox() => BoxDecoration(
-    color: const Color(0xFFF4ECFA),
+    color: Colors.white,
     borderRadius: BorderRadius.circular(10),
     border: Border.all(color: Colors.grey.shade300),
   );

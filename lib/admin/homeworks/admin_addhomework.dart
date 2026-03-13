@@ -62,6 +62,7 @@ class _AdminAddHomeworkState extends State<AdminAddHomework> {
   String _formatDate(DateTime date) {
     return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
   }
+
   @override
   void initState() {
     super.initState();
@@ -201,12 +202,28 @@ class _AdminAddHomeworkState extends State<AdminAddHomework> {
   }
 
   Future<void> _saveHomework() async {
-    if (selectedClass == null ||
-        selectedSection == null ||
-        workDate == null ||
-        submissionDate == null ||
-        remarkCtrl.text.trim().isEmpty) {
-      _showMsg("Please fill all required fields");
+    if (selectedClass == null) {
+      _showMsg("Please select class");
+      return;
+    }
+
+    if (selectedSection == null) {
+      _showMsg("Please select section");
+      return;
+    }
+
+    if (workDate == null) {
+      _showMsg("Please select work date");
+      return;
+    }
+
+    if (submissionDate == null) {
+      _showMsg("Please select submission date");
+      return;
+    }
+
+    if (titleCtrl.text.trim().isEmpty) {
+      _showMsg("Please enter title");
       return;
     }
 
@@ -430,49 +447,72 @@ class _AdminAddHomeworkState extends State<AdminAddHomework> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        GestureDetector(
+
+                        InkWell(
                           onTap: _pickImage,
                           child: Container(
-                            height: 90,
-                            width: double.infinity,
+                            padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey.shade300),
                               color: const Color(0xfffafafa),
                             ),
-                            child: selectedImage != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.file(
-                                      selectedImage!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                    ),
-                                  )
-                                : existingAttachmentUrl != null &&
-                                      existingAttachmentUrl!.isNotEmpty
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      existingAttachmentUrl!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                    ),
-                                  )
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(
-                                        Icons.add_a_photo_outlined,
-                                        size: 30,
-                                      ),
-                                      SizedBox(height: 6),
-                                      Text(
-                                        "Tap to select image",
-                                        style: TextStyle(fontSize: 12),
+                            child: Row(
+                              children: [
+                                /// LEFT SIDE TEXT
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.attach_file, size: 18),
+                                      const SizedBox(width: 6),
+
+                                      Expanded(
+                                        child: Text(
+                                          selectedImage != null
+                                              ? selectedImage!.path
+                                                    .split('/')
+                                                    .last
+                                              : (existingAttachmentUrl != null
+                                                    ? existingAttachmentUrl!
+                                                          .split('/')
+                                                          .last
+                                                    : "Tap to select image"),
+                                          style: const TextStyle(fontSize: 12),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ],
                                   ),
+                                ),
+
+                                const SizedBox(width: 10),
+
+                                /// RIGHT SIDE SQUARE PREVIEW
+                                Container(
+                                  height: 60,
+                                  width: 60,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.grey.shade200,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: selectedImage != null
+                                        ? Image.file(
+                                            selectedImage!,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : existingAttachmentUrl != null &&
+                                              existingAttachmentUrl!.isNotEmpty
+                                        ? Image.network(
+                                            existingAttachmentUrl!,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : const Icon(Icons.image, size: 25),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
