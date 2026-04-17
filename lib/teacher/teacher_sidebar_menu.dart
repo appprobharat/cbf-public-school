@@ -1,4 +1,6 @@
+import 'package:cbf/leave/list_leaveApproval.dart';
 import 'package:cbf/teacher/geo_attendance_mark.dart';
+import 'package:cbf/teacher/roll_no.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +10,7 @@ import 'package:cbf/login_page.dart';
 import 'package:cbf/alert/stu_alert.dart';
 import 'package:cbf/connect_teacher/teacher_chat_list.dart';
 import 'package:cbf/payment/payment_teacher_screen.dart';
+
 import 'package:cbf/school_info_page.dart';
 import 'package:cbf/syllabus/syllabus.dart';
 import 'package:cbf/teacher/AssignMarksPage.dart';
@@ -35,7 +38,9 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
   String teacherPhoto = '';
   String teacherClass = '';
   String teacherSection = '';
+  // String selectedSession = "2024-25";
 
+  // List<String> sessionList = ["2022-23", "2023-24", "2024-25"];
   @override
   void initState() {
     super.initState();
@@ -56,9 +61,7 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
 
   String getPhotoUrl(String photo) {
     if (photo.isEmpty) return '';
-    return photo.startsWith('http')
-        ? photo
-        : '${ApiService.Url}/$photo';
+    return photo.startsWith('http') ? photo : '${ApiService.Url}/$photo';
   }
 
   void _navigate(BuildContext context, Widget page) {
@@ -108,7 +111,7 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
         children: [
           Container(
             color: AppColors.primary,
-            height: 130,
+            height: 110,
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
@@ -161,6 +164,18 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
             Icons.person,
             'Mark Geo Attd.',
             () => _navigate(context, const GeoAttendanceTeacher()),
+          ),
+          sidebarItem(
+            context,
+            Icons.format_list_numbered,
+            'Update Roll no',
+            () => _navigate(context, const UpdateRollNoPage()),
+          ),
+            sidebarItem(
+            context,
+            Icons.leave_bags_at_home_rounded,
+            'Approve Leave',
+            () => _navigate(context, const LeaveApprovalListPage()),
           ),
           sidebarItem(
             context,
@@ -299,9 +314,11 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
     VoidCallback onTap,
   ) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      visualDensity: const VisualDensity(vertical: -3),
+      leading: Icon(icon, size: 20),
+      title: Text(title, style: const TextStyle(fontSize: 13)),
+      dense: true,
+      visualDensity: const VisualDensity(vertical: -4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       onTap: onTap,
     );
   }

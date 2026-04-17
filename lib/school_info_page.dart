@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:cbf/api_service.dart';
 
@@ -94,6 +95,7 @@ class _SchoolInfoPageState extends State<SchoolInfoPage> {
         await file.writeAsBytes(response.bodyBytes, flush: true);
 
         if (!mounted) return;
+        await OpenFile.open(file.path);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ QR saved to Downloads folder")),
         );
@@ -107,6 +109,7 @@ class _SchoolInfoPageState extends State<SchoolInfoPage> {
         await file.writeAsBytes(response.bodyBytes, flush: true);
 
         if (!mounted) return;
+        await OpenFile.open(file.path);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ QR saved in Files app")),
         );
@@ -125,7 +128,9 @@ class _SchoolInfoPageState extends State<SchoolInfoPage> {
     if (url.isEmpty) {
       return const AssetImage("assets/images/logo.png");
     }
-    return NetworkImage(url.startsWith('http') ? url : '${ApiService.Url}/$url');
+    return NetworkImage(
+      url.startsWith('http') ? url : '${ApiService.Url}/$url',
+    );
   }
 
   @override

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cbf/api_service.dart';
 import 'package:cbf/complaint/addComplaint.dart';
 import 'package:cbf/complaint/complaint_detail_page.dart';
-import 'package:cbf/dashboard/dashboard_screen.dart';
+
 
 class ViewComplaintPage extends StatefulWidget {
   const ViewComplaintPage({super.key});
@@ -87,15 +87,7 @@ class _ViewComplaintPageState extends State<ViewComplaintPage> {
         ),
         backgroundColor: AppColors.primary,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const DashboardScreen()),
-            );
-          },
-        ),
+        leading: BackButton()
       ),
       body: isLoading
           ? const Center(

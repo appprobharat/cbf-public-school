@@ -37,7 +37,9 @@ class ApiService {
     final token = await _getToken();
     return {'Authorization': 'Bearer $token', 'Accept': 'application/json'};
   }
-
+static Future<Map<String, String>> headers() async {
+  return await _headers();
+}
 
   // ================= LOGOUT =================
 

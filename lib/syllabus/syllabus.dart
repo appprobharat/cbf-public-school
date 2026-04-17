@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_html_table/flutter_html_table.dart';
 import 'package:cbf/api_service.dart';
-
 
 class SyllabusPage extends StatefulWidget {
   const SyllabusPage({super.key});
@@ -12,9 +12,6 @@ class SyllabusPage extends StatefulWidget {
 }
 
 class _SyllabusPageState extends State<SyllabusPage> {
- 
-  
-
   List<dynamic> exams = [];
   Map<String, dynamic>? selectedExam;
   List<dynamic> syllabusContent = [];
@@ -35,10 +32,7 @@ class _SyllabusPageState extends State<SyllabusPage> {
     setState(() => isLoadingExams = true);
 
     try {
-      final response = await ApiService.post(
-        context,
-        '/get_exam',
-      );
+      final response = await ApiService.post(context, '/get_exam');
 
       // 🔐 token expired → auto logout already handled
       if (response == null) return;
@@ -92,7 +86,9 @@ class _SyllabusPageState extends State<SyllabusPage> {
         "/syllabus",
         body: {'ExamId': examId},
       );
-
+      debugPrint("📤 Sending ExamId: $examId");
+      debugPrint("📥 STATUS CODE: ${response?.statusCode}");
+      debugPrint("📥 BODY: ${response?.body}");
       if (response == null) {
         if (!mounted) return;
         setState(() => isLoadingSyllabus = false);
@@ -237,6 +233,14 @@ class _SyllabusPageState extends State<SyllabusPage> {
           final item = syllabusContent[index];
           final subject = item['Subject']?.toString() ?? '';
           final content = item['Content']?.toString() ?? '';
+          final cleanContent = content
+              .replaceAll('<figure class="table">', '')
+              .replaceAll('<figure>', '')
+              .replaceAll('</figure>', '')
+              .replaceAll('&nbsp;', ' ')
+              .replaceAll(r'\u2019', "'")
+              .replaceAll('\n', '');
+          print("👉 CLEAN CONTENT: $cleanContent");
 
           return Card(
             elevation: 2,
@@ -258,14 +262,30 @@ class _SyllabusPageState extends State<SyllabusPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Html(
-                    data: content,
-                    style: {
-                      "body": Style(
-                        fontSize: FontSize(14),
-                        lineHeight: LineHeight.em(1.5),
+                  SingleChildScrollView(
+
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: MediaQuery.of(context).size.width,
                       ),
-                    },
+                      child: Html(
+                        data: cleanContent,
+                        extensions: [TableHtmlExtension()],
+                        style: {
+                          "table": Style(
+                            border: Border.all(color: Colors.black),
+                          ),
+                          "td": Style(
+                            padding: HtmlPaddings.all(8),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          "th": Style(
+                            padding: HtmlPaddings.all(8),
+                            backgroundColor: Colors.grey.shade300,
+                          ),
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
