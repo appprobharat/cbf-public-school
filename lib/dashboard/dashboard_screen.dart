@@ -60,11 +60,11 @@ class _DashboardScreenState extends State<DashboardScreen> with RouteAware {
   List<dynamic> events = [];
   List<dynamic> siblings = [];
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
-  }
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  // }
 
   @override
   void didPopNext() {
@@ -72,11 +72,11 @@ class _DashboardScreenState extends State<DashboardScreen> with RouteAware {
     _refreshDashboard();
   }
 
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   routeObserver.unsubscribe(this);
+  //   super.dispose();
+  // }
 
   @override
   void initState() {

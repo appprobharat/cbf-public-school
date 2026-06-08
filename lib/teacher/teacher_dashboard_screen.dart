@@ -35,17 +35,17 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen>
   // String selectedSession = "2024-25";
 
   // List<String> sessionList = ["2022-23", "2023-24", "2024-25"];
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
-  }
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  // }
 
-  @override
-  void dispose() {
-    routeObserver.unsubscribe(this);
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   routeObserver.unsubscribe(this);
+  //   super.dispose();
+  // }
 
   @override
   void didPopNext() {
