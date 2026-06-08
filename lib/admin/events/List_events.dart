@@ -353,10 +353,7 @@ class _ListEventPageState extends State<ListEventPage> {
     if (isDownloading) return;
     isDownloading = true;
 
-    // ✅ URL now comes from ApiService
-    final fullUrl = filePath.startsWith('http')
-        ? filePath
-        : ApiService.homeworkAttachment(filePath);
+  final fullUrl = filePath.toString();
 
     try {
       final fileName = fullUrl.split('/').last;

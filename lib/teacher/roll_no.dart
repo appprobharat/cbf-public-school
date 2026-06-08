@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:cbf/api_service.dart';
 
@@ -257,6 +257,9 @@ class _UpdateRollNoPageState extends State<UpdateRollNoPage> {
                                 child: TextField(
                                   controller: controllers[index],
                                   keyboardType: TextInputType.number,
+                                   inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(fontSize: 14),
                                   decoration: InputDecoration(

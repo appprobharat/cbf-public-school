@@ -18,7 +18,7 @@ android {
         applicationId = "com.cbfpublicschool.apppro"
         minSdk = flutter.minSdkVersion
         targetSdk = 35
-        versionCode = 7
+        versionCode = 10
         versionName = "2.0.0"
     }
 

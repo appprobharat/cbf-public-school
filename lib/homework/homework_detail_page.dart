@@ -27,19 +27,14 @@ class _HomeworkDetailPageState extends State<HomeworkDetailPage> {
     }
   }
 
-  // ====================================================
-  // 📥 SAFE FILE DOWNLOAD (iOS + Android)
-  // ====================================================
+
   Future<void> downloadFile(String filePath) async {
     if (isDownloading) return;
 
     setState(() => isDownloading = true);
 
     try {
-      // ✅ URL CENTRALIZED (no hardcode)
-      final fullUrl = filePath.startsWith('http')
-          ? filePath
-          : ApiService.homeworkAttachment(filePath);
+    final fullUrl = filePath.toString();
 
       final fileName = fullUrl.split('/').last;
 
@@ -48,7 +43,7 @@ class _HomeworkDetailPageState extends State<HomeworkDetailPage> {
         throw Exception("Download failed");
       }
 
-      // ================= ANDROID =================
+   
       if (Platform.isAndroid) {
         final downloadsDir = Directory('/storage/emulated/0/Download');
         final file = File('${downloadsDir.path}/$fileName');
@@ -85,9 +80,7 @@ class _HomeworkDetailPageState extends State<HomeworkDetailPage> {
     }
   }
 
-  // ====================================================
-  // 🧱 UI (UNCHANGED)
-  // ====================================================
+
   @override
   Widget build(BuildContext context) {
     final attachment = widget.homework['Attachment'];

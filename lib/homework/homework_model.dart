@@ -8,11 +8,8 @@ import 'package:cbf/api_service.dart';
 import 'package:cbf/homework/homework_detail_page.dart';
 import 'package:cbf/homework/homework_page.dart';
 
-bool _isDownloading = false; // 🔒 download lock (logic only)
+bool _isDownloading = false;
 
-// ====================================================
-// 📅 DATE FORMAT (SAFE)
-// ====================================================
 String formatDate(String? inputDate) {
   if (inputDate == null || inputDate.isEmpty) return '';
   try {
@@ -22,57 +19,146 @@ String formatDate(String? inputDate) {
   }
 }
 
-// ====================================================
-// 📥 SAFE FILE DOWNLOAD (iOS + Android)
-// ====================================================
 Future<void> downloadFile(BuildContext context, String filePath) async {
   if (_isDownloading) return;
+
   _isDownloading = true;
 
-  // ✅ URL now comes from ApiService
-  final fullUrl = filePath.startsWith('http')
-      ? filePath
-      : ApiService.homeworkAttachment(filePath);
-
   try {
-    final fileName = fullUrl.split('/').last;
-    final dio = Dio();
+    print("=========== DOWNLOAD STARTED ===========");
+
+    final fullUrl = filePath.trim();
+
+    print("FULL URL => $fullUrl");
+
+    final uri = Uri.parse(fullUrl);
+
+    final fileName = uri.pathSegments.isNotEmpty
+        ? uri.pathSegments.last
+        : "downloaded_file";
+
+    print("FILE NAME => $fileName");
+
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        followRedirects: true,
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
     late String savePath;
 
-    // ================= ANDROID =================
     if (Platform.isAndroid) {
-      final downloadsDir = Directory('/storage/emulated/0/Download');
-      savePath = '${downloadsDir.path}/$fileName';
+      final dir = Directory('/storage/emulated/0/Download');
 
-      await dio.download(fullUrl, savePath);
-
-      // ✅ Preview open
-      await OpenFile.open(savePath);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("📥 Downloaded & Preview opened")),
-        );
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
       }
-    }
 
-    // ================= iOS =================
-    if (Platform.isIOS) {
-      final dir = await getApplicationDocumentsDirectory();
       savePath = '${dir.path}/$fileName';
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
 
-      await dio.download(fullUrl, savePath);
-
-      // ✅ Preview open
-      await OpenFile.open(savePath);
+      savePath = '${dir.path}/$fileName';
     }
-  } catch (e) {
+
+    print("SAVE PATH => $savePath");
+
+    final response = await dio.download(
+      fullUrl,
+      savePath,
+      onReceiveProgress: (received, total) {
+        if (total != -1) {
+          final progress = ((received / total) * 100).toStringAsFixed(0);
+
+          print("DOWNLOAD PROGRESS => $progress%");
+        }
+      },
+    );
+
+    print("STATUS CODE => ${response.statusCode}");
+    print("STATUS MESSAGE => ${response.statusMessage}");
+
+    // =========================
+    // ❌ ERROR HANDLING
+    // =========================
+
+    if (response.statusCode != 200) {
+      throw Exception("Server returned ${response.statusCode}");
+    }
+
+    final file = File(savePath);
+
+    if (!await file.exists()) {
+      throw Exception("File not found after download");
+    }
+
+    final fileSize = await file.length();
+
+    print("DOWNLOADED FILE SIZE => $fileSize bytes");
+
+    if (fileSize == 0) {
+      throw Exception("Downloaded file is empty");
+    }
+
+    // =========================
+    // 📂 OPEN FILE
+    // =========================
+
+    final openResult = await OpenFile.open(savePath);
+
+    print("OPEN FILE RESULT => ${openResult.message}");
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("✅ File downloaded successfully")));
+  } on DioException catch (e, stack) {
+    print("=========== DIO ERROR ===========");
+
+    print("ERROR => $e");
+
+    print("STATUS => ${e.response?.statusCode}");
+
+    print("RESPONSE DATA => ${e.response?.data}");
+
+    print("STACK => $stack");
+
+    String message = "Download failed";
+
+    if (e.response?.statusCode == 404) {
+      message = "File not found on server";
+    } else if (e.type == DioExceptionType.connectionTimeout) {
+      message = "Connection timeout";
+    } else if (e.type == DioExceptionType.receiveTimeout) {
+      message = "Receive timeout";
+    }
+
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("❌ Download failed")));
+      ).showSnackBar(SnackBar(content: Text(message)));
+    }
+  } catch (e, stack) {
+    print("=========== GENERAL ERROR ===========");
+
+    print(e);
+
+    print(stack);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ $e")));
     }
   } finally {
+    print("=========== DOWNLOAD FINISHED ===========");
+
     _isDownloading = false;
   }
 }

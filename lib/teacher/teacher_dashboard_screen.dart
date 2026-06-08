@@ -145,6 +145,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen>
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: AppColors.primary,
         titleSpacing: 0,
+        centerTitle: true,
 
         title: Row(
           children: [
@@ -157,61 +158,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen>
               ),
             ),
 
-            // 🔹 SESSION DROPDOWN (compact)
-            // PopupMenuButton<String>(
-            //   padding: EdgeInsets.zero,
-            //   onSelected: (value) async {
-            //     setState(() => selectedSession = value);
 
-            //     final prefs = await SharedPreferences.getInstance();
-            //     await prefs.setString("selected_session", value);
-
-            //     print("Session: $value");
-            //   },
-            //   itemBuilder: (context) {
-            //     return sessionList.map((session) {
-            //       return PopupMenuItem<String>(
-            //         value: session,
-            //         child: Text(
-            //           session,
-            //           style: const TextStyle(fontSize: 14), 
-            //         ),
-            //       );
-            //     }).toList();
-            //   },
-
-            //   child: Container(
-            //     padding: const EdgeInsets.symmetric(
-            //       horizontal: 12,
-            //       vertical: 6,
-            //     ), 
-            //     margin: const EdgeInsets.only(right: 8),
-            //     decoration: BoxDecoration(
-            //       color: Colors.white.withOpacity(0.18),
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //     child: Row(
-            //       children: [
-            //         Text(
-            //           selectedSession,
-            //           style: const TextStyle(
-            //             color: Colors.white,
-            //             fontSize: 13, 
-            //             fontWeight: FontWeight.w500,
-            //           ),
-            //         ),
-            //         const SizedBox(width: 2),
-            //         const Icon(
-            //           Icons.arrow_drop_down,
-            //           color: Colors.white,
-            //           size: 20, 
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
-
-            // 🔹 Profile Image
             teacherPhoto.isNotEmpty
                 ? CircleAvatar(
                     backgroundImage: NetworkImage(teacherPhoto),

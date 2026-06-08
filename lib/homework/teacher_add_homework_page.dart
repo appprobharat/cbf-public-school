@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:cbf/api_service.dart';
 
@@ -25,9 +25,9 @@ class _TeacherAddHomeworkPageState extends State<TeacherAddHomeworkPage> {
   DateTime? assignDate;
   DateTime? submissionDate;
   File? selectedFile;
-  final ImagePicker _picker = ImagePicker();
+
   bool isLoading = false;
-  bool _isSubmitting = false; // 🔒 prevent double submit
+  bool _isSubmitting = false; 
 
   @override
   void initState() {
@@ -106,12 +106,11 @@ class _TeacherAddHomeworkPageState extends State<TeacherAddHomeworkPage> {
     _descriptionController.text = data['Remark'] ?? '';
     assignDate = DateTime.tryParse(data['WorkDate'] ?? '');
     submissionDate = DateTime.tryParse(data['SubmissionDate'] ?? '');
+
     existingAttachment = data['Attachment'];
 
-    if (existingAttachment != null && existingAttachment!.isNotEmpty) {
-      existingAttachment = ApiService.homeworkAttachment(existingAttachment!);
-    }
     selectedClassId = int.tryParse(data['Class'] ?? '');
+
     if (selectedClassId != null) {
       await fetchSections(selectedClassId!);
     }
@@ -130,86 +129,152 @@ class _TeacherAddHomeworkPageState extends State<TeacherAddHomeworkPage> {
         submissionDate == null ||
         _titleController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty) {
+      debugPrint("❌ VALIDATION FAILED");
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+
       return;
     }
 
     _isSubmitting = true;
+
     setState(() => isLoading = true);
 
     try {
-      final token = await ApiService.getToken(); // already secure
+      final token = await ApiService.getToken();
 
       final isEdit = widget.homeworkToEdit != null;
+
       final endpoint = isEdit
           ? "/teacher/homework/update"
           : "/teacher/homework/store";
 
-      final request =
-          http.MultipartRequest(
-              'POST',
-              Uri.parse("${ApiService.baseUrl}$endpoint"),
-            )
-            ..headers['Authorization'] = 'Bearer $token'
-            ..headers['Accept'] = 'application/json'
-            ..fields['Class'] = selectedClassId.toString()
-            ..fields['Section'] = selectedSectionId.toString()
-            ..fields['Title'] = _titleController.text.trim()
-            ..fields['Description'] = _descriptionController.text.trim()
-            ..fields['AssignDate'] = DateFormat(
-              'yyyy-MM-dd',
-            ).format(assignDate!)
-            ..fields['SubmissionDate'] = DateFormat(
-              'yyyy-MM-dd',
-            ).format(submissionDate!);
+      debugPrint("========== HOMEWORK API DEBUG ==========");
+
+      debugPrint("📌 ENDPOINT => $endpoint");
+
+      debugPrint("📌 CLASS => $selectedClassId");
+
+      debugPrint("📌 SECTION => $selectedSectionId");
+
+      debugPrint("📌 TITLE => ${_titleController.text}");
+
+      debugPrint("📌 DESCRIPTION => ${_descriptionController.text}");
+
+      debugPrint(
+        "📌 ASSIGN DATE => ${DateFormat('yyyy-MM-dd').format(assignDate!)}",
+      );
+
+      debugPrint(
+        "📌 SUBMISSION DATE => ${DateFormat('yyyy-MM-dd').format(submissionDate!)}",
+      );
+
+      debugPrint("📌 FILE => ${selectedFile?.path}");
+
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse("${ApiService.baseUrl}$endpoint"),
+      );
+
+      request.headers['Authorization'] = 'Bearer $token';
+
+      request.headers['Accept'] = 'application/json';
+
+      request.fields['Class'] = selectedClassId.toString();
+
+      request.fields['Section'] = selectedSectionId.toString();
+
+      request.fields['Title'] = _titleController.text.trim();
+
+      request.fields['Description'] = _descriptionController.text.trim();
+
+      request.fields['AssignDate'] = DateFormat(
+        'yyyy-MM-dd',
+      ).format(assignDate!);
+
+      request.fields['SubmissionDate'] = DateFormat(
+        'yyyy-MM-dd',
+      ).format(submissionDate!);
 
       if (isEdit) {
         request.fields['HomeworkId'] = widget.homeworkToEdit!['id'].toString();
       }
 
+      debugPrint("📌 REQUEST FIELDS => ${request.fields}");
+
       if (selectedFile != null) {
+        debugPrint(
+          "📎 ATTACHMENT NAME => ${selectedFile!.path.split('/').last}",
+        );
+
         request.files.add(
           await http.MultipartFile.fromPath('Attachment', selectedFile!.path),
         );
+
+        debugPrint("✅ FILE ADDED");
+      } else {
+        debugPrint("⚠️ NO FILE SELECTED");
       }
 
-      final resp = await request.send();
-      final body = await resp.stream.bytesToString();
-      final decoded = jsonDecode(body);
+      final response = await request.send();
+
+      final responseBody = await response.stream.bytesToString();
+
+      debugPrint("📥 STATUS CODE => ${response.statusCode}");
+
+      debugPrint("📥 RESPONSE BODY => $responseBody");
+
+      debugPrint("========== API END ==========");
+
+      Map<String, dynamic> decoded = {};
+
+      try {
+        decoded = jsonDecode(responseBody);
+      } catch (e) {
+        debugPrint("❌ JSON DECODE ERROR => $e");
+      }
 
       if (!mounted) return;
 
-      if (resp.statusCode == 200) {
+      if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(decoded['message'] ?? 'Success')),
+          SnackBar(content: Text(decoded['message'] ?? 'Homework Submitted')),
         );
+
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(decoded['message'] ?? 'Failed')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(decoded['message'] ?? 'Submission Failed')),
+        );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint("❌ EXCEPTION => $e");
+
+      debugPrint("❌ STACK => $stack");
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
     } finally {
       _isSubmitting = false;
-      if (mounted) setState(() => isLoading = false);
+
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
-  Future<void> pickImage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
+  Future<void> pickAttachment() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
     );
 
-    if (image != null) {
+    if (result != null && result.files.single.path != null) {
       setState(() {
-        selectedFile = File(image.path);
+        selectedFile = File(result.files.single.path!);
       });
     }
   }
@@ -411,7 +476,7 @@ class _TeacherAddHomeworkPageState extends State<TeacherAddHomeworkPage> {
                       const SizedBox(height: 8),
 
                       GestureDetector(
-                        onTap: pickImage,
+                        onTap: pickAttachment,
                         child: Container(
                           height: 100,
                           padding: const EdgeInsets.all(10),

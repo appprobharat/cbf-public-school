@@ -52,7 +52,10 @@ class TeacherRecentHomeworks extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text("View All"),
+                child: const Text(
+                  "View All",
+                  style: TextStyle(color: AppColors.primary),
+                ),
               ),
             ],
           ),
@@ -90,12 +93,7 @@ class TeacherRecentHomeworks extends StatelessWidget {
                                   return;
                                 }
 
-                                final String fileUrl =
-                                    attachment.toString().startsWith('http')
-                                    ? attachment.toString()
-                                    : ApiService.homeworkAttachment(
-                                        attachment.toString(),
-                                      );
+                                final String fileUrl = attachment.toString();
 
                                 debugPrint(
                                   "📎 TEACHER HW DOWNLOAD URL: $fileUrl",
@@ -124,7 +122,7 @@ class TeacherRecentHomeworks extends StatelessWidget {
 
   // ---------------- SAFE FILE DOWNLOAD ----------------
   Future<void> _downloadFile(BuildContext context, String url) async {
-    if (url.isEmpty) {
+    if (url.trim().isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Attachment not available")));
@@ -132,48 +130,75 @@ class TeacherRecentHomeworks extends StatelessWidget {
     }
 
     try {
-      debugPrint("⬇️ Downloading: $url");
+      debugPrint("⬇️ Downloading URL => $url");
 
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+      // ✅ Encode URL safely
+      final uri = Uri.parse(url);
+
+      final response = await http.get(uri);
+
+      debugPrint("📥 STATUS CODE => ${response.statusCode}");
+
+      if (response.statusCode != 200) {
         throw Exception("Failed to download file");
       }
 
-      final fileName = Uri.parse(url).pathSegments.last;
+      // ✅ Get clean filename without query params
+      String fileName = uri.pathSegments.last;
+
+      if (fileName.isEmpty) {
+        fileName = "downloaded_file";
+      }
+
+      debugPrint("📄 File Name => $fileName");
 
       // ================= ANDROID =================
       if (Platform.isAndroid) {
-        // ✅ Real user-visible Downloads folder
         final downloadsDir = Directory('/storage/emulated/0/Download');
+
+        // ✅ create folder if not exists
+        if (!await downloadsDir.exists()) {
+          await downloadsDir.create(recursive: true);
+        }
+
         final filePath = '${downloadsDir.path}/$fileName';
 
         final file = File(filePath);
+
         await file.writeAsBytes(response.bodyBytes, flush: true);
 
-        if (!context.mounted) return;
-        await OpenFile.open(file.path);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("File saved to Downloads folder")),
-        );
-      }
+        debugPrint("✅ File Saved => $filePath");
 
+        if (!context.mounted) return;
+
+        await OpenFile.open(filePath);
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("File saved to Downloads")));
+      }
       // ================= iOS =================
-      if (Platform.isIOS) {
+      else if (Platform.isIOS) {
         final dir = await getApplicationDocumentsDirectory();
+
         final filePath = '${dir.path}/$fileName';
 
         final file = File(filePath);
+
         await file.writeAsBytes(response.bodyBytes, flush: true);
 
         if (!context.mounted) return;
-        await OpenFile.open(filePath); // Files app
+
+        await OpenFile.open(filePath);
       }
     } catch (e) {
-      debugPrint("❌ Teacher HW download error: $e");
+      debugPrint("❌ Download Error => $e");
+
       if (!context.mounted) return;
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Download failed")));
+      ).showSnackBar(SnackBar(content: Text("Download failed: $e")));
     }
   }
 

@@ -84,11 +84,7 @@ class _TeacherHomeworkPageState extends State<TeacherHomeworkPage> {
   // ---------------- FILE DOWNLOAD (IOS + ANDROID SAFE) ----------------
   Future<void> downloadFile(BuildContext context, String attachmentPath) async {
     try {
-      final String fileUrl = attachmentPath.startsWith('http')
-          ? attachmentPath
-          : ApiService.homeworkAttachment(attachmentPath);
-
-      debugPrint("⬇️ Download URL: $fileUrl");
+      final String fileUrl = attachmentPath.toString();
 
       final response = await http
           .get(Uri.parse(fileUrl))

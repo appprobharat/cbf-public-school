@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cbf/homework/holiday/stu_holiday_homework.dart';
 import 'package:cbf/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:cbf/leave/leave_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cbf/Attendance_UI/stu_attendance_page.dart';
 import 'package:cbf/Exam/exam_schedule.dart';
@@ -468,7 +470,6 @@ class _DashboardScreenState extends State<DashboardScreen> with RouteAware {
                           );
                           await fetchDashboardData(context);
                           Navigator.pop(dashboardContext, true);
-                        
                         } else {
                           ScaffoldMessenger.of(dashboardContext).showSnackBar(
                             const SnackBar(
@@ -1059,10 +1060,8 @@ class InfoCard extends StatelessWidget {
     final String schoolId = item["SchoolId"]?.toString() ?? '';
     final bool hasAttachment =
         attachment != null && attachment.isNotEmpty && schoolId.isNotEmpty;
-    final String folder = isEvent ? 'event' : 'notice';
-    final String fullAttachmentUrl = hasAttachment
-        ? ApiService.attachmentUrl(schoolId, folder, attachment)
-        : '';
+ final String fullAttachmentUrl =
+    hasAttachment ? attachment.toString() : '';
 
     debugPrint("📎 NOTICE ATTACHMENT URL: $fullAttachmentUrl");
 
@@ -1316,17 +1315,7 @@ class LeftSidebarMenu extends StatelessWidget {
               },
             ),
 
-            // sidebarTile(
-            //   icon: Icons.dashboard,
-            //   context: context,
-            //   title: 'New Dashboard',
-            //   onTap: () {
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (_) => StudentDashboard()),
-            //     );
-            //   },
-            // ),
+         
             sidebarTile(
               icon: Icons.person,
               context: context,
@@ -1347,6 +1336,19 @@ class LeftSidebarMenu extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => HomeworkPage()),
+                );
+              },
+            ),
+            sidebarTile(
+              icon: Icons.home_work,
+              context: context,
+              title: 'Holiday-Homeworks',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => StudentHolidayHomeworkPage(),
+                  ),
                 );
               },
             ),
@@ -1414,6 +1416,17 @@ class LeftSidebarMenu extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => SyllabusPage()),
+                );
+              },
+            ),
+            sidebarTile(
+              context: context,
+              icon: Icons.leave_bags_at_home,
+              title: 'Leave',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => LeaveListPage()),
                 );
               },
             ),

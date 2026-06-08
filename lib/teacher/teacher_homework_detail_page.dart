@@ -135,12 +135,7 @@ class TeacherHomeworkDetailPage extends StatelessWidget {
                       backgroundColor: AppColors.primary,
                     ),
                     onPressed: () {
-                       String fileUrl = homework['Attachment'].toString();
-
-                      if (!fileUrl.startsWith('http')) {
-                        fileUrl = ApiService.homeworkAttachment(fileUrl);
-                      }
-                      debugPrint("📎 TEACHER HW DETAIL DOWNLOAD URL: $fileUrl");
+                     String fileUrl = homework['Attachment'].toString();
 
                       downloadFile(context, fileUrl, fileName);
                     },

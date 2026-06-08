@@ -1,3 +1,4 @@
+import 'package:cbf/homework/holiday/list_holiday_homework.dart';
 import 'package:cbf/leave/list_leaveApproval.dart';
 import 'package:cbf/teacher/geo_attendance_mark.dart';
 import 'package:cbf/teacher/roll_no.dart';
@@ -65,7 +66,7 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
   }
 
   void _navigate(BuildContext context, Widget page) {
-    Navigator.pop(context); // ✅ close drawer
+    Navigator.pop(context);
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
   }
 
@@ -171,7 +172,7 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
             'Update Roll no',
             () => _navigate(context, const UpdateRollNoPage()),
           ),
-            sidebarItem(
+          sidebarItem(
             context,
             Icons.leave_bags_at_home_rounded,
             'Approve Leave',
@@ -200,6 +201,12 @@ class _TeacherSidebarMenuState extends State<TeacherSidebarMenu> {
             Icons.book,
             'Homeworks',
             () => _navigate(context, const TeacherHomeworkPage()),
+          ),
+          sidebarItem(
+            context,
+            Icons.collections_bookmark,
+            'Holiday-Homeworks',
+            () => _navigate(context, const ListHolidayHomework()),
           ),
           sidebarItem(
             context,
