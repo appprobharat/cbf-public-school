@@ -10,6 +10,7 @@ import 'package:cbf/splash_screen.dart';
 import 'package:cbf/login_page.dart';
 import 'package:cbf/dashboard/dashboard_screen.dart';
 import 'package:cbf/teacher/teacher_dashboard_screen.dart';
+import 'dart:io';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
@@ -19,13 +20,29 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }
 
+// Future<void> main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+
+//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+//   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+//   await NotificationService.initialize();
+//   runApp(const MyApp());
+// }
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (Platform.isAndroid) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  await NotificationService.initialize();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    await NotificationService.initialize();
+  }
+
   runApp(const MyApp());
 }
 
@@ -41,7 +58,8 @@ class MyApp extends StatelessWidget {
 
       supportedLocales: const [Locale('en')],
 
-      home: const RootDecider(),
+      // home: const RootDecider(),
+      home: LoginPage(),
     );
   }
 }
@@ -59,14 +77,18 @@ class _RootDeciderState extends State<RootDecider> {
 
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  @override
   void initState() {
     super.initState();
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint("🔔 Foreground message received");
-      NotificationService.display(message);
-    });
-    _initFirebaseMessaging();
+
+    if (Platform.isAndroid) {
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint("🔔 Foreground message received");
+        NotificationService.display(message);
+      });
+
+      _initFirebaseMessaging();
+    }
+
     _initApp();
   }
 
